@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ -n "$PLUSHU_TRACE" ]] && set -x
+
+for app in "$PLUSHU_ROOT/apps/"*; do
+  "$PLUSHU_ROOT/lib/plushook" deploy-app "$app"
+done

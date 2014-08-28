@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ -n "$PLUSHU_TRACE" ]] && set -x
+
+setup_systemd () {
+  cat >/etc/systemd/system/multi-user.target.wants/plushu-deploy-all.service \
+<<EOF
+[Unit]
+After=docker.service
+
+[Service]
+User=$PLUSHU_USER
+Environment="PLUSHU_ROOT=$PLUSHU_ROOT"
+ExecStart="$PLUSHU_ROOT/plugins/$PLUSHU_PLUGIN_NAME/startup/deploy-all"
+EOF
+}
+
+setup_upstart () {
+  cat >/etc/init/plushu-deploy-all.conf <<EOF
+start on filesystem and started docker
+stop on runlevel [!2345]
+setuid $PLUSHU_USER
+env PLUSHU_ROOT=`printf '%q' $PLUSHU_ROOT`
+export PLUSHU_ROOT
+exec "$PLUSHU_ROOT/plugins/$PLUSHU_PLUGIN_NAME/startup/deploy-all"
+EOF
+}
+
+if [[ "$EUID" == 0 ]]; then
+  if command -v systemctl >/dev/null; then
+    setup_systemd
+  elif command -v initctl >/dev/null; then
+    setup_upstart
+  else
+    echo "You don't appear to be using systemd or upstart; we don't have a"
+    echo "file to deploy all apps at startup for any other init system."
+    echo "Feel free to contribute one."
+  fi
+else
+  echo "This plugin needs to be installed as root."
+fi
