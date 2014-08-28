@@ -21,8 +21,17 @@ stop on runlevel [!2345]
 setuid $PLUSHU_USER
 env PLUSHU_ROOT=`printf '%q' $PLUSHU_ROOT`
 export PLUSHU_ROOT
+pre-start script
+  while [ ! -e /var/run/docker.sock ] ; do
+    command -v inotifywait >/dev/null 2&>1 &&
+      inotifywait -t 2 -e create /var/run || sleep 1
+  done
+end script
 exec "$PLUSHU_ROOT/plugins/$PLUSHU_PLUGIN_NAME/startup/deploy-all"
 EOF
+  if ! command -v inotifywait >/dev/null 2&>1; then
+    echo "Protip: install inotify-tools to start as soon as possible at boot"
+  fi
 }
 
 if [[ "$EUID" == 0 ]]; then
