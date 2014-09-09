@@ -9,7 +9,7 @@ After=docker.service
 
 [Service]
 User=$PLUSHU_USER
-Environment="PLUSHU_ROOT=$PLUSHU_ROOT"
+Environment="PLUSHU_ROOT=$PLUSHU_ROOT" "PLUSHU_APPS_DIR=$PLUSHU_APPS_DIR"
 ExecStart="$PLUSHU_ROOT/plugins/$PLUSHU_PLUGIN_NAME/startup/deploy-all"
 EOF
 }
@@ -19,8 +19,8 @@ setup_upstart () {
 start on filesystem and started docker
 stop on runlevel [!2345]
 setuid $PLUSHU_USER
-env PLUSHU_ROOT=`printf '%q' $PLUSHU_ROOT`
-export PLUSHU_ROOT
+env PLUSHU_ROOT=`printf '%q' $PLUSHU_ROOT` PLUSHU_APPS_DIR=`printf '%q' $PLUSHU_APPS_DIR`
+export PLUSHU_ROOT PLUSHU_APPS_DIR
 pre-start script
   while [ ! -e /var/run/docker.sock ] ; do
     command -v inotifywait >/dev/null 2&>1 &&
